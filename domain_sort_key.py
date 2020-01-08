@@ -1,13 +1,22 @@
 def domain_sort_key(domain):
-    """Key to sort domains alphabetically, by top level."""
+    """Key to sort hosts / domains alphabetically, by domain name."""
     import re
-    domain_expr = r'(.*\.)?(.*\.)(.*)'
+    domain_expr = r'(.*\.)?(.*\.)(.*)'  # Eg: (www.)(google.)(com)
     domain_search = re.search(domain_expr, domain)
-    if (not domain_search) or (not domain_search.group(1)):
-        key = domain
+
+    if domain_search and domain_search.group(1):
+        # sort by domain name  and then everything left of
+        # Eg: google, com, www
+        domain_values = (
+            domain_search.group(2),
+            domain_search.group(3),
+            domain_search.group(1)
+        )
+        key = '%s%s%s' % domain_values
+        print(key)
     else:
-        key = '%s%s%s' % (domain_search.group(
-            2), domain_search.group(3), domain_search.group(1))
+        # no host portion, just return the domain name
+        key = domain
     return(key)
 
 
