@@ -13,7 +13,6 @@ def domain_sort_key(domain):
             domain_search.group(1)
         )
         key = '%s%s%s' % domain_values
-        print(key)
     else:
         # no host portion, just return the domain name
         key = domain
