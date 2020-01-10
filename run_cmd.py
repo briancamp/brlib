@@ -1,15 +1,9 @@
 def run_cmd(cmd, shell=False, input=None):
     """Run the supplied command and return a dict of its outputs."""
     from subprocess import Popen, PIPE, STDOUT
-
-    def decode_output(output):
-        if output:
-            return(output.decode('utf-8'))
-
-    p = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT, shell=shell)
-    stdout_bytes, stderr_bytes = p.communicate(input=input)
-    stdout = decode_output(stdout_bytes)
-    stderr = decode_output(stderr_bytes)
+    p = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT, shell=shell,
+              universal_newlines=True)
+    stdout, stderr = p.communicate(input=input)
     exit_code = p.returncode
     return({'stdout': stdout, 'stderr': stderr, 'exit_code': exit_code})
 
