@@ -2,40 +2,40 @@
 
 def send_email(to_addrs, subject, from_addr, body='',
                attachment_names=None, mono_spaced=True, mono_big=True):
-    """Send an email using the local MTA."""
-    import os
+    """
+    Send an email using the local MTA.
+
+    The body is sent as text and a multi-part <pre>'ed block.
+    """
     import smtplib
-    import email
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
+    from email.message import EmailMessage
 
     if isinstance(to_addrs, str):
         to_addrs = [to_addrs]
     if isinstance(attachment_names, str):
         attachment_names = [attachment_names]
 
-    msg = MIMEMultipart()
+    msg = EmailMessage()
     msg['Subject'] = subject
     msg['From'] = from_addr
     msg['To'] = ', '.join(to_addrs)
     msg.preamble = body
 
     if mono_spaced and mono_big:
-        body = '<html><body><big><pre>%s</pre></big></body></html>' % body
+        body_html = '<html><body><big><pre>%s</pre></big></body></html>' % body
     elif mono_spaced:
-        body = '<html><body><pre>%s</pre></body></html>' % body
-    msg.attach(MIMEText(body, 'html'))
+        body_html = '<html><body><pre>%s</pre></body></html>' % body
+    msg.add_alternative(body_html, subtype='html')
 
     if attachment_names:
         for attachment_name in attachment_names:
-            part = email.mime.Base.MIMEBase('application', 'octet-stream')
-            with open(attachment_name) as f:
-                part.set_payload(f.read())
-            email.Encoders.encode_base64(part)
-            attachment = ('attachment; filename=%s' %
-                          os.path.basename(attachment_name))
-            part.add_header('Content-Disposition', attachment)
-            msg.attach(part)
+            with open(attachment_name, 'rb') as f:
+                attachment_data = f.read()
+            msg.add_attachment(
+                attachment_data,
+                maintype='application', subtype='octet-stream',
+                filename=attachment_name
+            )
 
     smtp = smtplib.SMTP('localhost')
     smtp.sendmail(from_addr, to_addrs, msg.as_string())
