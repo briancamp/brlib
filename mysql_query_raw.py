@@ -4,17 +4,20 @@ def mysql_query(query, db, host='localhost', user='root', password=''):
 
     Insecure - does not paramaterize queries
     """
-    import _mysql
-    db = _mysql.connect(host, user, password, db)
-    db.query(query)
-    results = []
-    raw_results = db.store_result()
-    while True:
-        result = raw_results.fetch_row(how=1)
-        if not result:
-            break
-        result = result[0]
-        results.append(result)
+    import pymysql
+    try:
+        db = pymysql.connect(
+            host=host, user=user, password=password, db=db,
+            cursorclass=pymysql.cursors.DictCursor
+        )
+    except pymysql.err.OperationalError:
+        raise Exception("Couldn't connect to Mysql server %s." % host)
+
+    with db.cursor() as cursor:
+        cursor.execute(query)
+        results = cursor.fetchall()
+        db.commit()
+
     return(results)
 
 
