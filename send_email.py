@@ -1,7 +1,7 @@
 
 
-def send_email(to_addrs, subject, from_addr, body='',
-               attachment_names=None, mono_spaced=True, mono_big=True):
+def send_email(to_addrs, subject, from_addr, body='', attachment_names=None,
+               mono_spaced=True, mono_big=True, html_nolink=True):
     """
     Send an email using the local MTA.
 
@@ -21,10 +21,23 @@ def send_email(to_addrs, subject, from_addr, body='',
     msg['To'] = ', '.join(to_addrs)
     msg.preamble = body
 
-    if mono_spaced and mono_big:
-        body_html = '<html><body><big><pre>%s</pre></big></body></html>' % body
-    elif mono_spaced:
-        body_html = '<html><body><pre>%s</pre></body></html>' % body
+    # Build a list of html components and then join them
+    body_html_lines = [body]
+    if mono_spaced:
+        # Add <pre> tags
+        body_html_lines.insert(0, '<pre>')
+        body_html_lines.append('</pre>')
+        if mono_big:
+            # Add <big> tags
+            body_html_lines.insert(0, '<big>')
+            body_html_lines.append('</big>')
+    if html_nolink:
+        # Add <a rel=nofollow> tags, to keep mail clients from automatically
+        # creating hyperlinks.
+        body_html_lines.insert(
+            0, '<a rel="nofollow" style="text-decoration:none; color:#333">')
+        body_html_lines.append('</a>')
+    body_html = '\n'.join(body_html_lines)
     msg.add_alternative(body_html, subtype='html')
 
     if attachment_names:
